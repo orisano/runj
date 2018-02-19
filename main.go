@@ -28,14 +28,14 @@ func run() (int, error) {
 
 	tmpl, err := template.New("cmd").Parse(flag.Arg(0))
 	if err != nil {
-		return 0, errors.Wrap(err, "コマンドテンプレートの解釈に失敗しました")
+		return 0, errors.Wrap(err, "failed to parse command template")
 	}
 
 	var w io.Reader = os.Stdin
 	if *jsonPath != "" {
 		f, err := os.Open(*jsonPath)
 		if err != nil {
-			return 0, errors.Wrap(err, "ファイルの読み込みに失敗しました")
+			return 0, errors.Wrap(err, "failed to open file")
 		}
 		defer f.Close()
 		w = f
@@ -43,12 +43,12 @@ func run() (int, error) {
 
 	var vars interface{}
 	if err := json.NewDecoder(w).Decode(&vars); err != nil {
-		return 0, errors.Wrap(err, "JSONのパースに失敗しました")
+		return 0, errors.Wrap(err, "failed to parse JSON")
 	}
 
 	cmd := bytes.NewBuffer(nil)
 	if err := tmpl.Execute(cmd, vars); err != nil {
-		return 0, errors.Wrap(err, "変数の展開に失敗しました")
+		return 0, errors.Wrap(err, "failed to expand variables")
 	}
 
 	c := exec.Command("/bin/bash", "-c", cmd.String())
@@ -60,7 +60,7 @@ func run() (int, error) {
 				return ws.ExitStatus(), nil
 			}
 		}
-		return 0, errors.Wrap(err, "コマンドの実行に失敗しました")
+		return 0, errors.Wrap(err, "failed to execute command")
 	}
 	return 0, nil
 }
