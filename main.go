@@ -15,9 +15,12 @@ import (
 )
 
 func main() {
+	log.SetFlags(0)
+	log.SetPrefix("runj: ")
+
 	code, err := run()
 	if err != nil {
-		log.Fatal("runj: ", err)
+		log.Fatal(err)
 	}
 	os.Exit(code)
 }
