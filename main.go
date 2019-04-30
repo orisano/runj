@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 	"text/template"
 
@@ -29,7 +30,7 @@ func run() (int, error) {
 	jsonPath := flag.String("f", "", "json path")
 	flag.Parse()
 
-	tmpl, err := template.New("cmd").Parse(flag.Arg(0))
+	tmpl, err := template.New("cmd").Parse(strings.Join(flag.Args(), " "))
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to parse command template")
 	}
