@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -11,8 +12,6 @@ import (
 	"strings"
 	"syscall"
 	"text/template"
-
-	"github.com/pkg/errors"
 )
 
 func main() {
@@ -32,27 +31,27 @@ func run() (int, error) {
 
 	tmpl, err := template.New("cmd").Parse(strings.Join(flag.Args(), " "))
 	if err != nil {
-		return 0, errors.Wrap(err, "failed to parse command template")
+		return 0, fmt.Errorf("parse command template: %w", err)
 	}
 
-	var w io.Reader = os.Stdin
+	var r io.Reader = os.Stdin
 	if *jsonPath != "" {
 		f, err := os.Open(*jsonPath)
 		if err != nil {
-			return 0, errors.Wrap(err, "failed to open file")
+			return 0, fmt.Errorf("open json: %w", err)
 		}
 		defer f.Close()
-		w = f
+		r = f
 	}
 
 	var vars interface{}
-	if err := json.NewDecoder(w).Decode(&vars); err != nil {
-		return 0, errors.Wrap(err, "failed to parse JSON")
+	if err := json.NewDecoder(r).Decode(&vars); err != nil {
+		return 0, fmt.Errorf("parse json: %w", err)
 	}
 
-	cmd := bytes.NewBuffer(nil)
+	cmd := &bytes.Buffer{}
 	if err := tmpl.Execute(cmd, vars); err != nil {
-		return 0, errors.Wrap(err, "failed to expand variables")
+		return 0, fmt.Errorf("expand variables: %w", err)
 	}
 
 	c := exec.Command("/bin/bash", "-c", cmd.String())
@@ -64,7 +63,7 @@ func run() (int, error) {
 				return ws.ExitStatus(), nil
 			}
 		}
-		return 0, errors.Wrap(err, "failed to execute command")
+		return 0, fmt.Errorf("execute command: %w", err)
 	}
 	return 0, nil
 }
